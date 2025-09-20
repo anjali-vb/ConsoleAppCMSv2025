@@ -14,5 +14,9 @@ namespace ConsoleAppCMSv2025.Service
 
         // For searching patient by MMR No
         Task<Patient> GetPatientByMMRAsync(string mmrNo);
+
+        // For searching patient by  Phone number
+
+        Task<Patient> GetPatientByPhoneAsync(string phoneNumber);
     }
 }

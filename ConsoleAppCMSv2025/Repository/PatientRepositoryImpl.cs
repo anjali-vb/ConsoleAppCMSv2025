@@ -94,8 +94,55 @@ namespace ConsoleAppCMSv2025.Repository
             return patient;
         }
 
+
+
+        public async Task<Patient> GetPatientByPhoneAsync(string phoneNumber)
+        {
+            Patient patient = null;
+
+            using (SqlConnection conn = new SqlConnection(winConnString))
+            {
+                await conn.OpenAsync();
+                using (SqlCommand cmd = new SqlCommand("sp_GetPatientByPhone", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@PhoneNumber", phoneNumber);
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            patient = MapReaderToPatient(reader);
+                        }
+                    }
+                }
+            }
+
+            return patient;
+        }
+        private Patient MapReaderToPatient(SqlDataReader reader)
+        {
+            return new Patient
+            {
+                PatientId = Convert.ToInt32(reader["PatientId"]),
+                PatientName = reader["PatientName"].ToString(),
+                MMRNo = reader["MMRNo"].ToString(),
+                MobileNumber = reader["MobileNumber"].ToString(),
+                Gender = reader["Gender"].ToString(),
+                DateOfBirth = Convert.ToDateTime(reader["DateOfBirth"]),
+                Address = reader["Address"].ToString(),
+                BloodGroup = reader["BloodGroup"].ToString(),
+
+                // Safe handling for NULL MembershipId
+                MembershipId = reader["MembershipId"] == DBNull.Value
+                                ? null
+                                : (int?)Convert.ToInt32(reader["MembershipId"])
+            };
+        }
     }
 }
+
+
 
 
 

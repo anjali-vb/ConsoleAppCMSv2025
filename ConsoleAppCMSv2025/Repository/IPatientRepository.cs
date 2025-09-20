@@ -10,5 +10,9 @@ namespace ConsoleAppCMSv2025.Repository
 
         //interface to get patient by MMR number
         Task<Patient> GetPatientByMMRAsync(string mmrNo);
+
+        Task<Patient> GetPatientByPhoneAsync(string phoneNumber);
+
+
     }
 }

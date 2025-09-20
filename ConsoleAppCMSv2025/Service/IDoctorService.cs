@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ConsoleAppCMSv2025.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace ConsoleAppCMSv2025.Service
 {
-    internal interface IDoctorService
+    public interface IDoctorService
     {
+        Task<List<Doctor>> GetAllDoctorsAsync();
     }
 }

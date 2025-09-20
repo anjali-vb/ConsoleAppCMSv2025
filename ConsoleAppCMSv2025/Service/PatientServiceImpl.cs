@@ -24,7 +24,14 @@ namespace ConsoleAppCMSv2025.Service
 
         public Task<int> RegisternewPatientAsync(Patient patient)
         {
-           return _patientRepository.RegisterPatientAsync(patient);
+            return _patientRepository.RegisterPatientAsync(patient);
+        }
+
+        public Task<Patient> GetPatientByPhoneAsync(string phoneNumber)
+        {
+            return _patientRepository.GetPatientByPhoneAsync(phoneNumber);
         }
     }
 }
+
+

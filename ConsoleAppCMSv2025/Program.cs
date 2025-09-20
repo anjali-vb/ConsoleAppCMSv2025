@@ -153,10 +153,11 @@ namespace ClinicCMS
                 Console.Clear();
                 Console.WriteLine("------ Receptionist Dashboard ------");
                 Console.WriteLine("1. Register New Patient");
-                Console.WriteLine("2. Create Appointment");
-                Console.WriteLine("3. Search Patient by MMR No");
-                Console.WriteLine("4. Search Patient by Phone Number");
-                Console.WriteLine("5. Exit");
+                Console.WriteLine("2. Show doctor avaialability");
+                Console.WriteLine("3. Create Appointment");
+                Console.WriteLine("4. Search Patient by MMR No");
+                Console.WriteLine("5. Search Patient by Phone Number");
+                Console.WriteLine("6. Exit");
                 Console.Write("Enter choice: ");
                 string choice = Console.ReadLine();
 
@@ -166,16 +167,20 @@ namespace ClinicCMS
                         await RegisternewPatientAsync(patientService);
                         break;
                     case "2":
+                        IDoctorService doctorService = new DoctorServiceImpl(new DoctorRepositoryImpl());
+                        await ShowDoctorAvailabilityAsync(doctorService);
+                        break;
+                    case "3":
                         IAppointmentService appointmentService = new AppointmentServiceImpl(new AppointmentRepositoryImpl());
                         await CreateAppointmentAsync(appointmentService);
                         break;
-                    case "3":
+                    case "4":
                         await SearchPatientByMMRAsync(patientService);
                         break;
-                    case "4":
-                        Console.WriteLine(" Search Patient by Phone Number (PatientRepository)");
-                        break;
                     case "5":
+                        await SearchPatientByPhoneAsync(patientService);
+                        break;
+                    case "6":
                         return; // back to login
                     default:
                         Console.WriteLine(" Invalid choice! Try again...");
@@ -225,7 +230,7 @@ namespace ClinicCMS
             Console.WriteLine($"\n Patient registered successfully with PatientId = {newPatientId}");
             Console.ResetColor();
 
-            // ✅ Menu after registration
+            //  Menu after registration
             Console.WriteLine("\nWhat would you like to do next?");
             Console.WriteLine("1. Register another patient");
             Console.WriteLine("2. Create an appointment for this patient");
@@ -253,6 +258,57 @@ namespace ClinicCMS
                     return;
             }
         }
+
+        //method to show availability of doctors
+        private static async Task ShowDoctorAvailabilityAsync(IDoctorService doctorService)
+        {
+            Console.Clear();
+            Console.WriteLine("---- Doctor Availability ----");
+
+            var doctors = await doctorService.GetAllDoctorsAsync();
+
+            if (doctors.Count == 0)
+            {
+                Console.WriteLine("No doctors found.");
+            }
+            else
+            {
+                foreach (var doc in doctors)
+                {
+                    Console.Write($"\nDoctor ID: {doc.DoctorId} |");
+                    Console.Write($"Name: {doc.DoctorName} |");
+                    Console.Write($"Consultation Fee: {doc.ConsultationFee:0.00} |");
+                    Console.Write($"Department: {doc.Department} |");
+                    Console.Write($"Period: {doc.PeriodName} |");
+                    Console.Write($"Time Slot: {doc.TimeSlot} |");
+                    Console.Write($"Active: {(doc.IsActive ? "Yes" : "No")} |");
+                }
+            }
+
+            // Menu navigation
+            Console.WriteLine("\nWhat would you like to do next?");
+            Console.WriteLine("1. View again");
+            Console.WriteLine("2. Go back to Receptionist Dashboard");
+            Console.WriteLine("3. Exit");
+
+            string nextChoice = Console.ReadLine();
+
+            switch (nextChoice)
+            {
+                case "1":
+                    await ShowDoctorAvailabilityAsync(doctorService);
+                    break;
+                case "2":
+                    return;
+                case "3":
+                    Environment.Exit(0);
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice, returning to dashboard...");
+                    return;
+            }
+        }
+
 
         //create an appointment method
         private static async Task CreateAppointmentAsync(IAppointmentService appointmentService)
@@ -357,6 +413,59 @@ namespace ClinicCMS
             {
                 case "1":
                     await SearchPatientByMMRAsync(patientService); // recursive search again
+                    break;
+                case "2":
+                    return; // back to dashboard
+                case "3":
+                    Environment.Exit(0);
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice, returning to Receptionist Dashboard...");
+                    return;
+            }
+        }
+
+        public static async Task SearchPatientByPhoneAsync(IPatientService patientService)
+        {
+            Console.Write("\nEnter Phone Number: ");
+            string phone = Console.ReadLine();
+
+            var patient = await patientService.GetPatientByPhoneAsync(phone);
+
+            if (patient != null)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("\nPatient Found!");
+                Console.WriteLine($"ID: {patient.PatientId}");
+                Console.WriteLine($"Name: {patient.PatientName}");
+                Console.WriteLine($"Date of Birth: {patient.DateOfBirth:dd-MM-yyyy}");
+                Console.WriteLine($"Gender: {patient.Gender}");
+                Console.WriteLine($"Blood Group: {patient.BloodGroup}");
+                Console.WriteLine($"Mobile: {patient.MobileNumber}");
+                Console.WriteLine($"Address: {patient.Address}");
+                Console.WriteLine($"Membership ID: {patient.MembershipId}");
+                Console.WriteLine($"MMR No: {patient.MMRNo}");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nNo patient found with that phone number.");
+                Console.ResetColor();
+            }
+
+            // Menu-driven options after search
+            Console.WriteLine("\nWhat would you like to do next?");
+            Console.WriteLine("1. Search another patient by Phone");
+            Console.WriteLine("2. Go back to Receptionist Dashboard");
+            Console.WriteLine("3. Exit");
+
+            string nextChoice = Console.ReadLine();
+
+            switch (nextChoice)
+            {
+                case "1":
+                    await SearchPatientByPhoneAsync(patientService); // recursive search again
                     break;
                 case "2":
                     return; // back to dashboard

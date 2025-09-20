@@ -11,37 +11,50 @@ using System.Threading.Tasks;
 
 namespace ConsoleAppCMSv2025.Repository
 {
-    public class DoctorRepositoryImpl : IDoctorRepository
-    {
-        string winConnString = ConfigurationManager.ConnectionStrings["CsWinSql"].ConnectionString;
-
-        public async Task<List<Doctor>> GetAllDoctorsAsync()
+    
+        public class DoctorRepositoryImpl : IDoctorRepository
         {
-            var doctors = new List<Doctor>();
-            using (SqlConnection conn = ConnectionManager.OpenConnection(winConnString))
-            {
-                SqlCommand cmd = new SqlCommand("sp_GetAllDoctors", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
+            private readonly string connString = ConfigurationManager.ConnectionStrings["CsWinSql"].ConnectionString;
 
-                SqlDataReader reader = await cmd.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
+            public async Task<List<Doctor>> GetAllDoctorsAsync()
+            {
+                var doctors = new List<Doctor>();
+
+                using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    doctors.Add(new Doctor
+                    await conn.OpenAsync();
+                    using (SqlCommand cmd = new SqlCommand("sp_GetAllDoctors", conn))
                     {
-                        DoctorId = Convert.ToInt32(reader["DoctorId"]),
-                       
-                        ConsultationFee = Convert.ToDecimal(reader["ConsultationFee"]),
-                        IsActive = Convert.ToBoolean(reader["IsActive"])
-                    });
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                        using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                            doctors.Add(new Doctor
+                            {
+                                DoctorId = (int)reader["DoctorId"],
+                                DoctorName = reader["DoctorName"].ToString(),
+                                ConsultationFee = (decimal)reader["ConsultationFee"],
+                                Department = reader["Department"].ToString(),
+                                PeriodName = reader["PeriodName"].ToString(),
+                                TimeSlot = reader["TimeSlot"].ToString(),
+                                UserId = (int)reader["UserId"],
+                                IsActive = (bool)reader["IsActive"]
+                            });
+                            }
+                        }
+                    }
                 }
+
+                return doctors;
             }
-            return doctors;
-        }
+        
 
         public async Task<Doctor> GetDoctorByIdAsync(int doctorId)
         {
             Doctor doctor = null;
-            using (SqlConnection conn = ConnectionManager.OpenConnection(winConnString))
+            using (SqlConnection conn = ConnectionManager.OpenConnection(connString))
             {
                 SqlCommand cmd = new SqlCommand("sp_GetDoctorById", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -64,7 +77,7 @@ namespace ConsoleAppCMSv2025.Repository
 
         public async Task<int> AddDoctorAsync(Doctor doctor)
         {
-            using (SqlConnection conn = ConnectionManager.OpenConnection(winConnString))
+            using (SqlConnection conn = ConnectionManager.OpenConnection(connString))
             {
                 SqlCommand cmd = new SqlCommand("sp_AddDoctor", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -77,7 +90,7 @@ namespace ConsoleAppCMSv2025.Repository
 
         public async Task<int> UpdateDoctorAsync(Doctor doctor)
         {
-            using (SqlConnection conn = ConnectionManager.OpenConnection(winConnString))
+            using (SqlConnection conn = ConnectionManager.OpenConnection(connString))
             {
                 SqlCommand cmd = new SqlCommand("sp_UpdateDoctor", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -91,7 +104,7 @@ namespace ConsoleAppCMSv2025.Repository
 
         public async Task<int> DeleteDoctorAsync(int doctorId)
         {
-            using (SqlConnection conn = ConnectionManager.OpenConnection(winConnString))
+            using (SqlConnection conn = ConnectionManager.OpenConnection(connString))
             {
                 SqlCommand cmd = new SqlCommand("sp_DeleteDoctor", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
