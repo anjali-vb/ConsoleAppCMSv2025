@@ -10,5 +10,7 @@ namespace ConsoleAppCMSv2025.Service
     public interface IAppointmentService
     {
         Task<(int AppointmentId, int TokenNumber)> CreateAppointmentAsync(Appointment appointment);
+        Task<List<Appointment>> GetAppointmentsByDoctorUserIdAsync(int userId);
+
     }
 }

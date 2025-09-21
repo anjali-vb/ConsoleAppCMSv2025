@@ -9,7 +9,8 @@ namespace ConsoleAppCMSv2025.Service
 {
     public interface IUserService
     {
-        Task<int> AuthenticateUserByRoleIdAsync(string userName, string password);
+        Task<User> AuthenticateUserByRoleIdAsync(string userName, string password);
+
 
     }
 }

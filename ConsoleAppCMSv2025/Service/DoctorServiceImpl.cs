@@ -21,5 +21,6 @@ namespace ConsoleAppCMSv2025.Service
         {
             return await doctorRepository.GetAllDoctorsAsync();
         }
+
     }
 }

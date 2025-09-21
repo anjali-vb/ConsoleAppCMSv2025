@@ -16,9 +16,10 @@ namespace ConsoleAppCMSv2025.Service
         {
             _userRepository = userRepository;
         }
-        public Task<int> AuthenticateUserByRoleIdAsync(string username, string password)
+        public Task<User> AuthenticateUserByRoleIdAsync(string username, string password)
         {
             return _userRepository.AuthenticateUserByRoleIdAsync(username, password);
         }
+
     }
 }

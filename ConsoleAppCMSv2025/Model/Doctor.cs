@@ -14,6 +14,8 @@ namespace ConsoleAppCMSv2025.Model
 
         public string Department { get; set; }
         public string PeriodName { get; set; }
+
+
         public string TimeSlot { get; set; }
         public int UserId { get; set; }
         public bool IsActive { get; set; }

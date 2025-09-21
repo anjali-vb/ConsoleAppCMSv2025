@@ -11,7 +11,7 @@ namespace ConsoleAppCMSv2025.Repository
 {
     public interface IUserRepository
     {
-        Task<int> AuthenticateUserByRoleIdAsync(string username, string password);
+        Task<User> AuthenticateUserByRoleIdAsync(string username, string password);
 
     }
 }

@@ -10,5 +10,8 @@ namespace ConsoleAppCMSv2025.Service
     public interface IDoctorService
     {
         Task<List<Doctor>> GetAllDoctorsAsync();
-    }
+    
+   
+}
+
 }

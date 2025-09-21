@@ -9,6 +9,12 @@ namespace ConsoleAppCMSv2025.Repository
 {
     public interface IAppointmentRepository
     {
+        //to craete an appointment
         Task<(int AppointmentId, int TokenNumber)> CreateAppointmentAsync(Appointment appointment);
+
+        //to view the doctor appointment
+
+        Task<List<Appointment>> GetAppointmentsByDoctorUserIdAsync(int doctorId);
+
     }
 }

@@ -54,8 +54,8 @@ namespace ClinicCMS
 
                 // Call UserService (BLL) with UserRepository (DAL)
                 IUserService userService = new UserServiceImpl(new UserRepositoryImpl());
-                int roleId = await userService.AuthenticateUserByRoleIdAsync(userName, password);
-
+                User user = await userService.AuthenticateUserByRoleIdAsync(userName, password);
+                int roleId = user.RoleId;
                 if (roleId > 0)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -66,7 +66,7 @@ namespace ClinicCMS
                     switch (roleId)
                     {
                         case 1: // Doctor
-                            await ShowDoctorMenuAsync();
+                            await ShowDoctorMenuAsync(user);
                             break;
 
                         case 2: // Receptionist
@@ -97,29 +97,33 @@ namespace ClinicCMS
         }
 
         // Doctor Menu
-        private static async Task ShowDoctorMenuAsync()
+        private static async Task ShowDoctorMenuAsync(User user)
         {
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine("----- Doctor Dashboard ----");
+                Console.WriteLine("-----"+user.FullName+" Doctor Dashboard ----");
                 Console.WriteLine("1. View Appointments");
-                Console.WriteLine("2. Write Prescription");
-                Console.WriteLine("3. View Patient History (by MMR No)");
-                Console.WriteLine("4. Medicine Prescription");
-                Console.WriteLine("5. Consultation Details");
-                Console.WriteLine("6. Prescribe Lab Test for Patient");
-                Console.WriteLine("7. Logout");
+                Console.WriteLine("2. Add consultation");
+                Console.WriteLine("3. Write Medicine Prescription");
+                Console.WriteLine("4. Prescribe Lab Test for Patient");
+                Console.WriteLine("5. View Patient History (by MMR No)");
+
+                Console.WriteLine("6. Logout");
                 Console.Write("Enter choice: ");
                 string choice = Console.ReadLine();
 
                 switch (choice)
                 {
                     case "1":
-                        Console.WriteLine(" View Appointments (AppointmentService)");
+                        IAppointmentService appointmentService =  new AppointmentServiceImpl(new AppointmentRepositoryImpl());
+
+                        // Pass the logged in doctor’s ID here
+                        await ViewAppointmentsAsync(appointmentService, user);
                         break;
+
                     case "2":
-                        Console.WriteLine(" Write Prescription (MedicineService/ConsultationService)");
+
                         break;
                     case "3":
                         Console.WriteLine(" View Patient History by MMR No (PatientService)");
@@ -144,6 +148,64 @@ namespace ClinicCMS
             }
         }
 
+        
+        //method to view the appointment of doctor by doctor.
+
+        public static async Task ViewAppointmentsAsync(IAppointmentService appointmentService, User user)
+        {
+            var appointments = await appointmentService.GetAppointmentsByDoctorUserIdAsync(user.UserId);
+
+            if (appointments == null || appointments.Count == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nNo appointments found.");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n--- Appointments for Doctor {user.FullName} ---\n");
+                Console.ResetColor();
+
+                foreach (var app in appointments)
+                {
+                    Console.Write($"Appointment ID : {app.AppointmentId}|");
+                    Console.Write($"Date : {app.AppointmentDate:dd-MM-yyyy}|");
+                    Console.Write($"Period : {app.PeriodName}|");
+                    Console.Write($"Time Slot  : {app.TimeSlot}|");
+                    Console.Write($"Token Number : {app.TokenNumber}|");
+                    Console.Write($"Status : {app.ConsultationStatus}|");
+                    Console.Write($"Patient Name : {app.PatientName}|");
+                    Console.Write($"MMR No : {app.MMRNo}|\n");
+                    Console.WriteLine("----------------------------------------");
+                }
+            }
+
+            // Sub-menu after displaying appointments
+            Console.WriteLine("\nWhat would you like to do next?");
+            Console.WriteLine("1. Refresh Appointments");
+            Console.WriteLine("2. Go back to Doctor Dashboard");
+            Console.WriteLine("3. Logout");
+
+            string choice = Console.ReadLine();
+            switch (choice)
+            {
+                case "1":
+                    await ViewAppointmentsAsync(appointmentService, user);
+                    break;
+                case "2":
+                    return; // back to doctor dashboard
+                case "3":
+                    Environment.Exit(0);
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice, returning to Doctor Dashboard...");
+                    return;
+            }
+        }
+
+        //Methid to add consultation
+        
         // Receptionist Menu
         private static async Task ShowReceptionistMenuAsync()
         {
@@ -190,6 +252,7 @@ namespace ClinicCMS
                 Console.ReadKey();
             }
         }
+
 
         
 
@@ -320,8 +383,8 @@ namespace ClinicCMS
             Console.Write("Enter Appointment Date (yyyy-mm-dd): ");
             appointment.AppointmentDate = DateTime.Parse(Console.ReadLine());
 
-            Console.Write("Enter Appointment Time Slot: ");
-            appointment.AppointmentTimeSlot = Console.ReadLine();
+            Console.Write("Enter PeriodName: ");
+            appointment.PeriodName = Console.ReadLine();
 
             Console.Write("Enter Consultation Status: ");
             appointment.ConsultationStatus = Console.ReadLine();

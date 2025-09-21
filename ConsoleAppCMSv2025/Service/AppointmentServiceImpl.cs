@@ -21,5 +21,26 @@ namespace ConsoleAppCMSv2025.Service
         {
             return _appointmentRepository.CreateAppointmentAsync(appointment);
         }
+
+
+
+        //To view the doctor appointments by the doctor
+
+        private static async Task ViewAppointmentsAsync(object appointmentService, object doctorId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<Appointment>> GetAppointmentsByDoctorUserIdAsync(int userId)
+        {
+            return await _appointmentRepository.GetAppointmentsByDoctorUserIdAsync(userId);
+
+        }
     }
-}
+    }
+
+
+
+
+
+
