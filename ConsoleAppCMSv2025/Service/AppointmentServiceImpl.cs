@@ -24,12 +24,6 @@ namespace ConsoleAppCMSv2025.Service
 
 
 
-        //To view the doctor appointments by the doctor
-
-        private static async Task ViewAppointmentsAsync(object appointmentService, object doctorId)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<List<Appointment>> GetAppointmentsByDoctorUserIdAsync(int userId)
         {

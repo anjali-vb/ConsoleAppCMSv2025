@@ -2,6 +2,7 @@
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,23 +11,26 @@ namespace ConsoleAppCMSv2025.Repository
 {
     public class ConsultationRepositoryImpl : IConsultationRepository
     {
-        private readonly string winConnString = "your_connection_string_here";
+        private readonly string _connectionString = ConfigurationManager.ConnectionStrings["CsWinSql"].ConnectionString;
+
 
         public async Task AddConsultationAsync(Consultation consultation)
         {
-            using (SqlConnection conn = new SqlConnection(winConnString))
+            using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                await conn.OpenAsync();
-                using (SqlCommand cmd = new SqlCommand("sp_AddConsultation", conn))
-                {
-                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@Symptoms", consultation.Symptoms);
-                    cmd.Parameters.AddWithValue("@Diagnosis", consultation.Diagnosis);
-                    cmd.Parameters.AddWithValue("@Notes", consultation.Notes);
-                    cmd.Parameters.AddWithValue("@AppointmentId", consultation.AppointmentId);
+                string query = @"INSERT INTO TblConsultation 
+                            (Symptoms, Diagnosis, Notes, AppointmentId, IsActive) 
+                             VALUES (@Symptoms, @Diagnosis, @Notes, @AppointmentId, @IsActive)";
 
-                    await cmd.ExecuteNonQueryAsync();
-                }
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@Symptoms", consultation.Symptoms ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@Diagnosis", consultation.Diagnosis ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@Notes", consultation.Notes ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue("@AppointmentId", consultation.AppointmentId);
+                cmd.Parameters.AddWithValue("@IsActive", consultation.IsActive);
+
+                await conn.OpenAsync();
+                await cmd.ExecuteNonQueryAsync();
             }
         }
     }

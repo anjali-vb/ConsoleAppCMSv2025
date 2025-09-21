@@ -1,12 +1,21 @@
-﻿using System;
+﻿using ConsoleAppCMSv2025.Model;
+using ConsoleAppCMSv2025.Repository;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConsoleAppCMSv2025.Service
 {
-    internal class MedicineServiceImpl
+    internal class MedicineServiceImpl : IMedicineService
     {
+        private readonly IMedicineRepository _medicineRepository;
+
+        public MedicineServiceImpl(IMedicineRepository medicineRepository)
+        {
+            _medicineRepository = medicineRepository;
+        }
+
+        public List<Medicine> GetAllMedicines()
+        {
+            return _medicineRepository.GetAllMedicines();
+        }
     }
 }

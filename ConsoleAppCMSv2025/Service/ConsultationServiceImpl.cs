@@ -19,6 +19,13 @@ namespace ConsoleAppCMSv2025.Service
 
         public async Task AddConsultationAsync(Consultation consultation)
         {
+            if (consultation == null)
+                throw new ArgumentNullException(nameof(consultation));
+
+            // Extra business logic checks (optional)
+            if (consultation.AppointmentId <= 0)
+                throw new ArgumentException("Invalid AppointmentId");
+
             await _consultationRepository.AddConsultationAsync(consultation);
         }
     }

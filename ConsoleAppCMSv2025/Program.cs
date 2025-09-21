@@ -55,6 +55,15 @@ namespace ClinicCMS
                 // Call UserService (BLL) with UserRepository (DAL)
                 IUserService userService = new UserServiceImpl(new UserRepositoryImpl());
                 User user = await userService.AuthenticateUserByRoleIdAsync(userName, password);
+                if (user == null)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("\n Invalid credentials. Try again.");
+                    Console.ResetColor();
+                    Console.WriteLine("\nPress any key to return to login...");
+                    Console.ReadKey();
+                    continue;
+                }
                 int roleId = user.RoleId;
                 if (roleId > 0)
                 {
@@ -104,12 +113,7 @@ namespace ClinicCMS
                 Console.Clear();
                 Console.WriteLine("-----"+user.FullName+" Doctor Dashboard ----");
                 Console.WriteLine("1. View Appointments");
-                Console.WriteLine("2. Add consultation");
-                Console.WriteLine("3. Write Medicine Prescription");
-                Console.WriteLine("4. Prescribe Lab Test for Patient");
-                Console.WriteLine("5. View Patient History (by MMR No)");
-
-                Console.WriteLine("6. Logout");
+                Console.WriteLine("2. Logout");
                 Console.Write("Enter choice: ");
                 string choice = Console.ReadLine();
 
@@ -117,27 +121,9 @@ namespace ClinicCMS
                 {
                     case "1":
                         IAppointmentService appointmentService =  new AppointmentServiceImpl(new AppointmentRepositoryImpl());
-
-                        // Pass the logged in doctor’s ID here
                         await ViewAppointmentsAsync(appointmentService, user);
                         break;
-
                     case "2":
-
-                        break;
-                    case "3":
-                        Console.WriteLine(" View Patient History by MMR No (PatientService)");
-                        break;
-                    case "4":
-                        Console.WriteLine(" Medicine Prescription (MedicineService)");
-                        break;
-                    case "5":
-                        Console.WriteLine(" Consultation Details (ConsultationService)");
-                        break;
-                    case "6":
-                        Console.WriteLine(" Prescribe Lab Test for Patient (LabTestService)");
-                        break;
-                    case "7":
                         return; // back to login
                     default:
                         Console.WriteLine(" Invalid choice! Try again...");
@@ -150,7 +136,6 @@ namespace ClinicCMS
 
         
         //method to view the appointment of doctor by doctor.
-
         public static async Task ViewAppointmentsAsync(IAppointmentService appointmentService, User user)
         {
             var appointments = await appointmentService.GetAppointmentsByDoctorUserIdAsync(user.UserId);
@@ -179,33 +164,138 @@ namespace ClinicCMS
                     Console.Write($"MMR No : {app.MMRNo}|\n");
                     Console.WriteLine("----------------------------------------");
                 }
-            }
 
-            // Sub-menu after displaying appointments
-            Console.WriteLine("\nWhat would you like to do next?");
-            Console.WriteLine("1. Refresh Appointments");
-            Console.WriteLine("2. Go back to Doctor Dashboard");
-            Console.WriteLine("3. Logout");
-
-            string choice = Console.ReadLine();
-            switch (choice)
-            {
-                case "1":
-                    await ViewAppointmentsAsync(appointmentService, user);
-                    break;
-                case "2":
-                    return; // back to doctor dashboard
-                case "3":
-                    Environment.Exit(0);
-                    break;
-                default:
-                    Console.WriteLine("Invalid choice, returning to Doctor Dashboard...");
-                    return;
+                // Prompt for Appointment ID to add consultation
+                Console.WriteLine("\nEnter Appointment ID to add consultation or press Enter to go back:");
+                string input = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    if (int.TryParse(input, out int appointmentId))
+                    {
+                        IConsultationService consultationService = new ConsultationServiceImpl(new ConsultationRepositoryImpl());
+                        await AddConsultationAsync(consultationService, appointmentId);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid Appointment ID.");
+                    }
+                }
             }
         }
 
-        //Methid to add consultation
-        
+        private static async Task AddConsultationAsync(IConsultationService consultationService, int appointmentId)
+        {
+            Console.Clear();
+            Console.WriteLine("---- Add consultation ----");
+            Console.WriteLine($"For Appointment ID: {appointmentId}");
+
+            Console.Write("Enter Symptoms: ");
+            string symptoms = Console.ReadLine();
+
+            Console.Write("Enter Diagnosis: ");
+            string diagnosis = Console.ReadLine();
+
+            Console.Write("Enter Notes: ");
+            string notes = Console.ReadLine();
+
+            Consultation consultation = new Consultation
+            {
+                AppointmentId = appointmentId,
+                Symptoms = symptoms,
+                Diagnosis = diagnosis,
+                Notes = notes,
+                CreatedDate = DateTime.Now,
+                IsActive = true
+            };
+
+            await consultationService.AddConsultationAsync(consultation);
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\nConsultation added successfully!");
+            Console.ResetColor();
+
+            // Sub-menu for further actions
+            while (true)
+            {
+                Console.WriteLine("\nWhat would you like to do next?");
+                Console.WriteLine("1. Write Medicine Prescription");
+                Console.WriteLine("2. Prescribe Lab Test for Patient");
+                Console.WriteLine("3. Go back to Appointments");
+                Console.WriteLine("4. Logout");
+                string nextChoice = Console.ReadLine();
+                switch (nextChoice)
+                {
+                    case "1":
+                        await WriteMedicinePrescriptionAsync(appointmentId);
+                        break;
+                    case "2":
+                        Console.WriteLine(" Prescribe Lab Test for Patient (Not implemented)");
+                        break;
+                    case "3":
+                        return;
+                    case "4":
+                        Environment.Exit(0);
+                        break;
+                    default:
+                        Console.WriteLine("Invalid choice, try again...");
+                        break;
+                }
+            }
+        }
+
+        private static async Task WriteMedicinePrescriptionAsync(int appointmentId)
+        {
+            IMedicineService medicineService = new MedicineServiceImpl(new MedicineRepositoryImpl());
+            var medicines = medicineService.GetAllMedicines();
+            Console.WriteLine("\nAvailable Medicines:");
+            foreach (var med in medicines)
+            {
+                Console.WriteLine($"ID: {med.MedicineId}, Name: {med.MedicineName}, Unit: {med.Unit}, Expiry: {med.ExpiryDate:dd-MM-yyyy}");
+            }
+            Console.Write("Enter Medicine ID from the list (or press Enter to skip): ");
+            string medIdInput = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(medIdInput) && int.TryParse(medIdInput, out int medicineId))
+            {
+                // List all dosages before entering dosage id
+                IDosageService dosageService = new DosageServiceImpl(new DosageRepositoryImpl());
+                var dosages = dosageService.GetAllDosages();
+                Console.WriteLine("\nAvailable Dosages:");
+                foreach (var dosage in dosages)
+                {
+                    Console.WriteLine($"ID: {dosage.DosageId}, Name: {dosage.DosageName}");
+                }
+                Console.Write("Enter Dosage ID from the list: ");
+                int dosageId = int.Parse(Console.ReadLine());
+                Console.Write("Enter Quantity: ");
+                string quantity = Console.ReadLine();
+                Console.Write("Enter Duration: ");
+                string duration = Console.ReadLine();
+
+                MedicinePrescription prescription = new MedicinePrescription
+                {
+                    MedicineId = medicineId,
+                    DosageId = dosageId,
+                    Quantity = quantity,
+                    Duration = duration,
+                    AppointmentId = appointmentId,
+                    IsActive = true
+                };
+                IMedicinePrescriptionService prescriptionService = new MedicinePrescriptionServiceImpl(new MedicinePrescriptionRepositoryImpl());
+                prescriptionService.AddMedicinePrescription(prescription);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\nPrescription saved: MedicineId={medicineId}, DosageId={dosageId}, Quantity={quantity}, Duration={duration}");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.WriteLine("No medicine selected.");
+            }
+        }
+
+
+
+
+
         // Receptionist Menu
         private static async Task ShowReceptionistMenuAsync()
         {
