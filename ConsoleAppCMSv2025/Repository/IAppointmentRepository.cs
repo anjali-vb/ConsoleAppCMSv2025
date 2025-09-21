@@ -16,5 +16,7 @@ namespace ConsoleAppCMSv2025.Repository
 
         Task<List<Appointment>> GetAppointmentsByDoctorUserIdAsync(int doctorId);
 
+        Task<List<Appointment>> GetAppointments();
+
     }
 }

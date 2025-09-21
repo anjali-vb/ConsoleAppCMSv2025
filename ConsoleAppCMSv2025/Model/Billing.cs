@@ -5,12 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ConsoleAppCMSv2025.Model
+
 {
-    public class LabTest
+    public class Billing
     {
-        public int LabTestId { get; set; }
+        public int BillId { get; set; }
         public int AppointmentId { get; set; }
-        public string TestName { get; set; }
-        public string TestDescription { get; set; }
+        public decimal ConsultationFee { get; set; }
+        public DateTime BillDate { get; set; }
+        public bool IsPaid { get; set; }
     }
 }

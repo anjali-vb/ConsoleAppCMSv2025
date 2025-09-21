@@ -12,5 +12,7 @@ namespace ConsoleAppCMSv2025.Service
         Task<(int AppointmentId, int TokenNumber)> CreateAppointmentAsync(Appointment appointment);
         Task<List<Appointment>> GetAppointmentsByDoctorUserIdAsync(int userId);
 
+        Task<List<Appointment>> GetAppointments();
+
     }
 }

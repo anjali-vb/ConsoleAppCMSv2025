@@ -14,7 +14,7 @@ namespace ConsoleAppCMSv2025.Repository
     public class AppointmentRepositoryImpl : IAppointmentRepository
 
 
-        //To create an appointment
+    //To create an appointment
     {
         private readonly string _connString = ConfigurationManager.ConnectionStrings["CsWinSql"].ConnectionString;
 
@@ -53,44 +53,80 @@ namespace ConsoleAppCMSv2025.Repository
         }
 
 
-        
-         //To view the appointment of a doctor by him/her self
-        
+
+        //To view the appointment of a doctor by him/her self
+
         private readonly string winConnString = ConfigurationManager.ConnectionStrings["CsWinSql"].ConnectionString;
 
         public async Task<List<Appointment>> GetAppointmentsByDoctorUserIdAsync(int userId)
+        {
+            var appointments = new List<Appointment>();
+
+            using (SqlConnection conn = new SqlConnection(winConnString))
             {
-                var appointments = new List<Appointment>();
-
-                using (SqlConnection conn = new SqlConnection(winConnString))
+                await conn.OpenAsync();
+                using (SqlCommand cmd = new SqlCommand("sp_GetAppointmentsByDoctor", conn))
                 {
-                    await conn.OpenAsync();
-                    using (SqlCommand cmd = new SqlCommand("sp_GetAppointmentsByDoctor", conn))
-                    {
-                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@UserId", userId);
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@UserId", userId);
 
-                        using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
                         {
-                            while (await reader.ReadAsync())
+                            appointments.Add(new Appointment
                             {
-                                appointments.Add(new Appointment
-                                {
-                                    AppointmentId = Convert.ToInt32(reader["AppointmentId"]),
-                                    AppointmentDate = Convert.ToDateTime(reader["AppointmentDate"]),
-                                    PeriodName = reader["PeriodName"].ToString(),
-                                    TokenNumber = Convert.ToInt32(reader["TokenNumber"]),
-                                    ConsultationStatus = reader["ConsultationStatus"].ToString(),
-                                    PatientName = reader["PatientName"].ToString(),
-                                    MMRNo = reader["MMRNo"].ToString(),
-                                    TimeSlot = reader["TimeSlot"].ToString()
-                                });
-                            }
+                                AppointmentId = Convert.ToInt32(reader["AppointmentId"]),
+                                AppointmentDate = Convert.ToDateTime(reader["AppointmentDate"]),
+                                PeriodName = reader["PeriodName"].ToString(),
+                                TokenNumber = Convert.ToInt32(reader["TokenNumber"]),
+                                ConsultationStatus = reader["ConsultationStatus"].ToString(),
+                                PatientName = reader["PatientName"].ToString(),
+                                MMRNo = reader["MMRNo"].ToString(),
+                                TimeSlot = reader["TimeSlot"].ToString()
+                            });
                         }
                     }
                 }
-                return appointments;
             }
+            return appointments;
+        }
+    
+
+
+    public async Task<List<Appointment>> GetAppointments()
+        {
+            var appointments = new List<Appointment>();
+
+            using (SqlConnection conn = new SqlConnection(winConnString))
+            {
+                await conn.OpenAsync();
+                using (SqlCommand cmd = new SqlCommand("sp_GetAppointments", conn))
+                {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            appointments.Add(new Appointment
+                            {
+                                AppointmentId = Convert.ToInt32(reader["AppointmentId"]),
+                                AppointmentDate = Convert.ToDateTime(reader["AppointmentDate"]),
+                                PeriodName = reader["PeriodName"].ToString(),
+                                TokenNumber = Convert.ToInt32(reader["TokenNumber"]),
+                                ConsultationStatus = reader["ConsultationStatus"].ToString(),
+                                PatientName = reader["PatientName"].ToString(),
+                                MMRNo = reader["MMRNo"].ToString(),
+                                TimeSlot = reader["TimeSlot"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
+            return appointments;
         }
     }
+}
+
 

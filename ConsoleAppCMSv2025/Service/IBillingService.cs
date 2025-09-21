@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace ConsoleAppCMSv2025.Service
 {
-    internal interface ILabTestService
+    public interface IBillingService
     {
-        int AddLabTest(LabTest labTest);
+        Task AddBillingAsync(Billing billing);
     }
-
 }
+

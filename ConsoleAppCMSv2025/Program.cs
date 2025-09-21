@@ -82,7 +82,7 @@ namespace ClinicCMS
                             await ShowReceptionistMenuAsync();
                             break;
 
-                        
+
 
                         default:
                             Console.ForegroundColor = ConsoleColor.Red;
@@ -227,7 +227,7 @@ namespace ClinicCMS
                         await WriteMedicinePrescriptionAsync(appointmentId);
                         break;
                     case "2":
-                        Console.WriteLine(" Prescribe Lab Test for Patient (Not implemented)");
+                        await PrescribeLabTestAsync(appointmentId);
                         break;
                     case "3":
                         return;
@@ -241,6 +241,7 @@ namespace ClinicCMS
             }
         }
 
+        //method to write medicine prescription
         private static async Task WriteMedicinePrescriptionAsync(int appointmentId)
         {
             IMedicineService medicineService = new MedicineServiceImpl(new MedicineRepositoryImpl());
@@ -290,6 +291,27 @@ namespace ClinicCMS
             }
         }
 
+        private static async Task PrescribeLabTestAsync(int appointmentId)
+        {
+            Console.WriteLine("\n--- Prescribe Lab Test ---");
+            Console.Write("Enter Test Name: ");
+            string testName = Console.ReadLine();
+            Console.Write("Enter Test Description: ");
+            string testDescription = Console.ReadLine();
+
+            LabTest labTest = new LabTest
+            {
+                AppointmentId = appointmentId,
+                TestName = testName,
+                TestDescription = testDescription
+            };
+            ILabTestService labTestService = new LabTestServiceImpl(new LabTestRepositoryImpl());
+            labTestService.AddLabTest(labTest);
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\nLab test prescribed and saved successfully!");
+            Console.ResetColor();
+        }
+
 
 
 
@@ -307,7 +329,8 @@ namespace ClinicCMS
                 Console.WriteLine("3. Create Appointment");
                 Console.WriteLine("4. Search Patient by MMR No");
                 Console.WriteLine("5. Search Patient by Phone Number");
-                Console.WriteLine("6. Exit");
+                Console.WriteLine("6. Generate bill");
+                Console.WriteLine("7. Exit");
                 Console.Write("Enter choice: ");
                 string choice = Console.ReadLine();
 
@@ -331,6 +354,9 @@ namespace ClinicCMS
                         await SearchPatientByPhoneAsync(patientService);
                         break;
                     case "6":
+                        await GenerateBillAsync();
+                        break;
+                    case "7":
                         return; // back to login
                     default:
                         Console.WriteLine(" Invalid choice! Try again...");
@@ -340,6 +366,8 @@ namespace ClinicCMS
                 Console.ReadKey();
             }
         }
+
+
 
 
 
@@ -576,6 +604,7 @@ namespace ClinicCMS
             }
         }
 
+        //method to search patient by phone number
         public static async Task SearchPatientByPhoneAsync(IPatientService patientService)
         {
             Console.Write("\nEnter Phone Number: ");
@@ -628,8 +657,91 @@ namespace ClinicCMS
                     return;
             }
         }
+
+        private static async Task GenerateBillAsync()
+        {
+            IAppointmentService appointmentService = new AppointmentServiceImpl(new AppointmentRepositoryImpl());
+            IBillingService billingService = new BillingServiceImpl(new BillingRepositoryImpl());
+            while (true)
+            {
+                // List all appointments (for all patients)
+                var appointments = await appointmentService.GetAppointments(); // 0 or overload for all
+                if (appointments == null || appointments.Count == 0)
+                {
+                    Console.WriteLine("No appointments found.");
+                    return;
+                }
+
+                Console.WriteLine("\n--- All Appointments ---");
+                foreach (var app in appointments)
+                {
+                    Console.WriteLine($"Appointment ID: {app.AppointmentId} | Patient Name: {app.PatientName} | Date: {app.AppointmentDate:dd-MM-yyyy} | Status: {app.ConsultationStatus}");
+                }
+
+                // Prompt for AppointmentId
+                Console.Write("\nEnter Appointment ID to generate bill: ");
+                if (!int.TryParse(Console.ReadLine(), out int appointmentId))
+                {
+                    Console.WriteLine("Invalid Appointment ID.");
+                    return;
+                }
+
+                // Find the selected appointment
+                var selectedAppointment = appointments.Find(a => a.AppointmentId == appointmentId);
+                if (selectedAppointment == null)
+                {
+                    Console.WriteLine("Appointment not found.");
+                    return;
+                }
+
+                // Prompt for ConsultationFee
+                Console.Write("Enter Consultation Fee: ");
+                if (!decimal.TryParse(Console.ReadLine(), out decimal fee))
+                {
+                    Console.WriteLine("Invalid Fee.");
+                    return;
+                }
+
+                // Prompt for IsPaid
+                Console.Write("Is Paid? (yes/no): ");
+                string isPaidInput = Console.ReadLine();
+                bool isPaid = isPaidInput.Equals("yes", StringComparison.OrdinalIgnoreCase);
+
+                // Create and save bill
+                var bill = new Billing
+                {
+                    AppointmentId = appointmentId,
+                    ConsultationFee = fee,
+                    BillDate = DateTime.Now,
+                    IsPaid = isPaid
+                };
+
+                await billingService.AddBillingAsync(bill);
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("\nBill generated successfully!");
+                Console.ResetColor();
+
+                Console.WriteLine("\nWhat would you like to do next?");
+                Console.WriteLine("1. Generate another Bill");
+                Console.WriteLine("2. Go back to Receptionist Dashboard");
+                Console.WriteLine("3. Logout");
+                string nextChoice = Console.ReadLine();
+                switch (nextChoice)
+                {
+                    case "1":
+                        continue;
+                    case "2":
+                        return;
+                    case "3":
+                        Environment.Exit(0);
+                        break;
+                    default:
+                        Console.WriteLine("Invalid choice, returning to Receptionist Dashboard...");
+                        return;
+                }
+            }
+        }
     }
 }
 
-        
-                

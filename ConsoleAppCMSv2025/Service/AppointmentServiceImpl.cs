@@ -30,6 +30,11 @@ namespace ConsoleAppCMSv2025.Service
             return await _appointmentRepository.GetAppointmentsByDoctorUserIdAsync(userId);
 
         }
+
+        async Task<List<Appointment>> IAppointmentService.GetAppointments()
+        {
+            return await _appointmentRepository.GetAppointments();
+        }
     }
     }
 

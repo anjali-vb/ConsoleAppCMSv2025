@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleAppCMSv2025.Service
+namespace ConsoleAppCMSv2025.Repository
 {
-    internal interface ILabTestService
+    public interface IBillingRepository
     {
-        int AddLabTest(LabTest labTest);
+        Task AddBillingAsync(Billing billing);
     }
-
 }
