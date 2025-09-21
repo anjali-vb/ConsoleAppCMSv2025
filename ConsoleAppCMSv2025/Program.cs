@@ -82,9 +82,7 @@ namespace ClinicCMS
                             await ShowReceptionistMenuAsync();
                             break;
 
-                        case 3: // Lab Technician
-                            await ShowLabTechnicianMenuAsync();
-                            break;
+                        
 
                         default:
                             Console.ForegroundColor = ConsoleColor.Red;
@@ -111,7 +109,7 @@ namespace ClinicCMS
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine("-----"+user.FullName+" Doctor Dashboard ----");
+                Console.WriteLine("-----" + user.FullName + " Doctor Dashboard ----");
                 Console.WriteLine("1. View Appointments");
                 Console.WriteLine("2. Logout");
                 Console.Write("Enter choice: ");
@@ -120,7 +118,7 @@ namespace ClinicCMS
                 switch (choice)
                 {
                     case "1":
-                        IAppointmentService appointmentService =  new AppointmentServiceImpl(new AppointmentRepositoryImpl());
+                        IAppointmentService appointmentService = new AppointmentServiceImpl(new AppointmentRepositoryImpl());
                         await ViewAppointmentsAsync(appointmentService, user);
                         break;
                     case "2":
@@ -134,7 +132,7 @@ namespace ClinicCMS
             }
         }
 
-        
+
         //method to view the appointment of doctor by doctor.
         public static async Task ViewAppointmentsAsync(IAppointmentService appointmentService, User user)
         {
@@ -344,7 +342,7 @@ namespace ClinicCMS
         }
 
 
-        
+
 
         // Register Patient Method
         private static async Task RegisternewPatientAsync(IPatientService patientService)
@@ -630,42 +628,8 @@ namespace ClinicCMS
                     return;
             }
         }
-
-
-        // Lab Technician Menu
-        private static async Task ShowLabTechnicianMenuAsync()
-        {
-            while (true)
-            {
-                Console.Clear();
-                Console.WriteLine(" -------- Lab Technician Dashboard ------");
-                Console.WriteLine("1. View Lab Tests of Patient (by MMR No)");
-                Console.WriteLine("2. Add Lab Report");
-                Console.WriteLine("3. View Patient Lab History (by MMR No)");
-                Console.WriteLine("4. Exit");
-                Console.Write("Enter choice: ");
-                string choice = Console.ReadLine();
-
-                switch (choice)
-                {
-                    case "1":
-                        Console.WriteLine(" View Lab Tests of Patient by MMR No (LabTestRepository)");
-                        break;
-                    case "2":
-                        Console.WriteLine(" Add Lab Report (LabReportService)");
-                        break;
-                    case "3":
-                        Console.WriteLine(" View Patient Lab History by MMR No (LabReportService)");
-                        break;
-                    case "4":
-                        return; // back to login
-                    default:
-                        Console.WriteLine(" Invalid choice! Try again...");
-                        break;
-                }
-                Console.WriteLine("\nPress any key to continue...");
-                Console.ReadKey();
-            }
-        }
     }
 }
+
+        
+                

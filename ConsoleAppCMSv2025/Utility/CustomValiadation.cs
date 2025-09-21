@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -59,5 +60,37 @@ namespace ConsoleAppCMSv2025.Utility
             return password;
         }
         #endregion
+
+
+
+        //validatins for TblPatient Table
+
+          //for mobile number
+        public static ValidationResult ValidateMobileNumber(string mobile, ValidationContext context)
+        {
+            if (string.IsNullOrEmpty(mobile))
+                return new ValidationResult("Mobile number is required.");
+
+            if (mobile.Length != 10)   // must be 10 digits
+                return new ValidationResult("Mobile number must be exactly 10 digits.");
+
+            if (!mobile.StartsWith("9"))  // must start with 9
+                return new ValidationResult("Mobile number must start with 9.");
+
+            return ValidationResult.Success;
+        }
+
+        //for DOB
+        public static ValidationResult ValidateDOB(DateTime dob, ValidationContext context)
+        {
+            if (dob < new DateTime(1990, 1, 1)) // Must not be before 1990
+                return new ValidationResult("Date of birth cannot be before 1990.");
+
+            if (dob > DateTime.Today) // Must not be in the future
+                return new ValidationResult("Date of birth cannot be in the future.");
+
+            return ValidationResult.Success;
+        }
     }
 }
+
