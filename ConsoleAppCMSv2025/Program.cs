@@ -383,9 +383,38 @@ namespace ClinicCMS
             Console.Write("Enter Patient Name: ");
             patient.PatientName = Console.ReadLine();
 
-            Console.Write("Enter Date of Birth (yyyy-mm-dd): ");
-            if (DateTime.TryParse(Console.ReadLine(), out DateTime dob))
-                patient.DateOfBirth = dob;
+            while (true)
+            {
+                Console.Write("Enter Date of Birth (yyyy-mm-dd): ");
+                string dobInput = Console.ReadLine();
+                if (DateTime.TryParse(dobInput, out DateTime dob))
+                {
+                    var today = DateTime.Today;
+                    var minDate = today.AddYears(-150);
+                    if (dob > today)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Date of Birth cannot be a future date.");
+                        Console.ResetColor();
+                        continue;
+                    }
+                    if (dob < minDate)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"Date of Birth cannot be before {minDate:yyyy-MM-dd}.");
+                        Console.ResetColor();
+                        continue;
+                    }
+                    patient.DateOfBirth = dob;
+                    break;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid date format. Please use yyyy-mm-dd.");
+                    Console.ResetColor();
+                }
+            }
 
             Console.Write("Enter Gender: ");
             patient.Gender = Console.ReadLine();
@@ -393,8 +422,25 @@ namespace ClinicCMS
             Console.Write("Enter Blood Group: ");
             patient.BloodGroup = Console.ReadLine();
 
-            Console.Write("Enter Mobile Number: ");
-            patient.MobileNumber = Console.ReadLine();
+            
+            // Phone Number validation
+            while (true)
+            {
+                Console.Write("Enter Mobile Number: ");
+                string phoneInput = Console.ReadLine();
+                if (System.Text.RegularExpressions.Regex.IsMatch(phoneInput ?? "", "^\\d{10}$"))
+                {
+                    patient.MobileNumber = phoneInput;
+                    break;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Mobile Number must be exactly 10 digits.");
+                    Console.ResetColor();
+                }
+            }
+
 
             Console.Write("Enter Address: ");
             patient.Address = Console.ReadLine();
@@ -759,10 +805,26 @@ namespace ClinicCMS
         //search patient by MMRNo
         public static async Task SearchPatientByMMRAsync(IPatientService patientService)
         {
-            Console.Write("\nEnter MMR Number: ");
-            string mmrNo = Console.ReadLine();
+            // MMR Number 
+            string MMRNo;
+            while (true)
+            {
+                Console.Write("Enter MMR Number (format: MMR0002): ");
+                string mmrInput = Console.ReadLine();
+                if (System.Text.RegularExpressions.Regex.IsMatch(mmrInput ?? "", "^MMR\\d{4}$"))
+                {
+                    MMRNo = mmrInput;
+                    break;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("MMR Number must start with 'MMR' followed by 4 digits (e.g., MMR0002).");
+                    Console.ResetColor();
+                }
+            }
 
-            var patient = await patientService.GetPatientByMMRAsync(mmrNo);
+                    var patient = await patientService.GetPatientByMMRAsync(MMRNo);
 
             if (patient != null)
             {
@@ -817,8 +879,26 @@ namespace ClinicCMS
         //method to search patient by phone number
         public static async Task SearchPatientByPhoneAsync(IPatientService patientService)
         {
-            Console.Write("\nEnter Phone Number: ");
-            string phone = Console.ReadLine();
+            string phone;
+
+            // Phone Number validation
+            while (true)
+            {
+                Console.Write("\nEnter Phone Number: ");
+                string phoneInput = Console.ReadLine();
+                if (System.Text.RegularExpressions.Regex.IsMatch(phoneInput ?? "", "^\\d{10}$"))
+                {
+                    phone = phoneInput;
+                    break;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Mobile Number must be exactly 10 digits.");
+                    Console.ResetColor();
+                }
+            }
+
 
             var patient = await patientService.GetPatientByPhoneAsync(phone);
 
