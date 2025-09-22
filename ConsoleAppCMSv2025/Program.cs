@@ -79,7 +79,7 @@ namespace ClinicCMS
                             break;
 
                         case 2: // Receptionist
-                            await ShowReceptionistMenuAsync();
+                            await ShowReceptionistMenuAsync(user);
                             break;
 
 
@@ -317,7 +317,7 @@ namespace ClinicCMS
 
 
         // Receptionist Menu
-        private static async Task ShowReceptionistMenuAsync()
+        private static async Task ShowReceptionistMenuAsync(User user)
         {
             IPatientService patientService = new PatientServiceImpl(new PatientRepositoryImpl());
             while (true)
@@ -337,7 +337,7 @@ namespace ClinicCMS
                 switch (choice)
                 {
                     case "1":
-                        await RegisternewPatientAsync(patientService);
+                        await RegisternewPatientAsync(patientService, user);
                         break;
                     case "2":
                         IDoctorService doctorService = new DoctorServiceImpl(new DoctorRepositoryImpl());
@@ -345,7 +345,7 @@ namespace ClinicCMS
                         break;
                     case "3":
                         IAppointmentService appointmentService = new AppointmentServiceImpl(new AppointmentRepositoryImpl());
-                        await CreateAppointmentAsync(appointmentService);
+                        await CreateAppointmentAsync(appointmentService, user);
                         break;
                     case "4":
                         await SearchPatientByMMRAsync(patientService);
@@ -373,7 +373,7 @@ namespace ClinicCMS
 
 
         // Register Patient Method
-        private static async Task RegisternewPatientAsync(IPatientService patientService)
+        private static async Task RegisternewPatientAsync(IPatientService patientService, User user)
         {
             Console.Clear();
             Console.WriteLine("---- Register New Patient ----");
@@ -421,11 +421,11 @@ namespace ClinicCMS
             switch (nextChoice)
             {
                 case "1":
-                    await RegisternewPatientAsync(patientService); // loop back
+                    await RegisternewPatientAsync(patientService, user); // loop back
                     break;
                 case "2":
                     IAppointmentService appointmentService = new AppointmentServiceImpl(new AppointmentRepositoryImpl());
-                    await CreateAppointmentAsync(appointmentService); // go to appointment
+                    await CreateAppointmentAsync(appointmentService,user); // go to appointment
                     break;
                 case "3":
                     return; // back to receptionist menu
@@ -490,7 +490,7 @@ namespace ClinicCMS
 
 
         //create an appointment method
-        private static async Task CreateAppointmentAsync(IAppointmentService appointmentService)
+        private static async Task CreateAppointmentAsync(IAppointmentService appointmentService, User user)
         {
             Console.Clear();
             Console.WriteLine("---- Create Appointment ----");
@@ -529,14 +529,138 @@ namespace ClinicCMS
             Console.Write("Enter Consultation Status: ");
             appointment.ConsultationStatus = Console.ReadLine();
 
-            Console.Write("Enter Patient ID: ");
-            appointment.PatientId = int.Parse(Console.ReadLine());
+            // Display all patients before asking for Patient ID
+            Console.WriteLine("\n---- Available Patients ----");
+            IPatientService patientService = new PatientServiceImpl(new PatientRepositoryImpl());
+            var patients = await patientService.GetAllPatientsAsync();
 
-            Console.Write("Enter Doctor ID: ");
-            appointment.DoctorId = int.Parse(Console.ReadLine());
+            if (patients == null || patients.Count == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("No patients found in the system. Please register a patient first.");
+                Console.ResetColor();
+                Console.WriteLine("\nPress any key to return to menu...");
+                Console.ReadKey();
+                return;
+            }
 
-            Console.Write("Enter User ID (Receptionist ID): ");
-            appointment.UserId = int.Parse(Console.ReadLine());
+            Console.WriteLine($"{"ID",-5} {"MMR No",-10} {"Name",-25} {"Mobile",-15} {"DOB",-12} {"Gender",-8} {"Blood Group",-10}");
+            Console.WriteLine(new string('-', 95));
+
+            foreach (var patient in patients)
+            {
+                Console.WriteLine($"{patient.PatientId,-5} {patient.MMRNo,-10} {patient.PatientName?.Substring(0, Math.Min(patient.PatientName.Length, 24)),-25} " +
+                                 $"{patient.MobileNumber,-15} {patient.DateOfBirth:dd-MM-yyyy,-12} {patient.Gender,-8} {patient.BloodGroup,-10}");
+            }
+
+            // Patient ID input with validation
+            int patientId;
+            while (true)
+            {
+                Console.Write("\nEnter Patient ID from the list above: ");
+                if (int.TryParse(Console.ReadLine(), out patientId))
+                {
+                    // Validate that the entered ID exists in the list
+                    var selectedPatient = patients.Find(p => p.PatientId == patientId);
+                    if (selectedPatient != null)
+                    {
+                        appointment.PatientId = patientId;
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"Selected Patient: {selectedPatient.PatientName} (MMR: {selectedPatient.MMRNo})");
+                        Console.ResetColor();
+                        break;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Invalid Patient ID. Please select from the list above.");
+                        Console.ResetColor();
+                    }
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid input. Please enter a valid Patient ID.");
+                    Console.ResetColor();
+                }
+            }
+
+            // Display all available doctors before asking for Doctor ID
+            Console.WriteLine("\n---- Available Doctors ----");
+            IDoctorService doctorService = new DoctorServiceImpl(new DoctorRepositoryImpl());
+            var doctors = await doctorService.GetAllDoctorsAsync();
+
+            if (doctors == null || doctors.Count == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("No doctors found in the system.");
+                Console.ResetColor();
+                Console.WriteLine("\nPress any key to return to menu...");
+                Console.ReadKey();
+                return;
+            }
+            Console.WriteLine($"{"ID",-5} {"Name",-25} {"Department",-50} {"Fee",10} {"Period",-12} {"Time Slot",-15} {"Active",-8}");
+            Console.WriteLine(new string('-', 125));
+
+
+
+
+            foreach (var doctor in doctors)
+            {
+                Console.WriteLine($"{doctor.DoctorId,-5} " +
+                  $"{doctor.DoctorName?.Substring(0, Math.Min(doctor.DoctorName.Length, 24)),-25} " +
+                  $"{doctor.Department?.Substring(0, Math.Min(doctor.Department.Length, 50)),-50} " +
+                  $"{doctor.ConsultationFee,10:0.00} " +
+                  $"{doctor.PeriodName,-12} " +
+                  $"{doctor.TimeSlot,-15} " +
+                  $"{(doctor.IsActive ? "Yes" : "No"),-8}");
+
+
+            }
+
+            // Doctor ID input with validation
+            int doctorId;
+            while (true)
+            {
+                Console.Write("\nEnter Doctor ID from the list above: ");
+                if (int.TryParse(Console.ReadLine(), out doctorId))
+                {
+                    // Validate that the entered ID exists in the list
+                    var selectedDoctor = doctors.Find(d => d.DoctorId == doctorId);
+                    if (selectedDoctor != null)
+                    {
+                        if (selectedDoctor.IsActive)
+                        {
+                            appointment.DoctorId = doctorId;
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Selected Doctor: {selectedDoctor.DoctorName} - {selectedDoctor.Department} (Fee: {selectedDoctor.ConsultationFee:0.00})");
+                            Console.ResetColor();
+                            break;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine("Selected doctor is not active. Please choose an active doctor.");
+                            Console.ResetColor();
+                        }
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Invalid Doctor ID. Please select from the list above.");
+                        Console.ResetColor();
+                    }
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid input. Please enter a valid Doctor ID.");
+                    Console.ResetColor();
+                }
+            }
+
+
+            appointment.UserId = user.UserId;
 
             appointment.IsActive = true;
 
@@ -561,7 +685,7 @@ namespace ClinicCMS
             switch (nextChoice)
             {
                 case "1":
-                    await CreateAppointmentAsync(appointmentService); // loop back
+                    await CreateAppointmentAsync(appointmentService, user); // loop back
                     break;
                 case "2":
                     return; // back to menu
@@ -589,6 +713,10 @@ namespace ClinicCMS
                 Console.WriteLine($"ID: {patient.PatientId}");
                 Console.WriteLine($"Name: {patient.PatientName}");
                 Console.WriteLine($"Date of Birth: {patient.DateOfBirth:dd-MM-yyyy}");
+                int age = DateTime.Today.Year - patient.DateOfBirth.Year;
+                if (patient.DateOfBirth.Date > DateTime.Today.AddYears(-age)) age--;
+                Console.WriteLine($"Age: {age}");
+
                 Console.WriteLine($"Gender: {patient.Gender}");
                 Console.WriteLine($"Blood Group: {patient.BloodGroup}");
                 Console.WriteLine($"Mobile: {patient.MobileNumber}");
@@ -643,6 +771,10 @@ namespace ClinicCMS
                 Console.WriteLine($"ID: {patient.PatientId}");
                 Console.WriteLine($"Name: {patient.PatientName}");
                 Console.WriteLine($"Date of Birth: {patient.DateOfBirth:dd-MM-yyyy}");
+                int age = DateTime.Today.Year - patient.DateOfBirth.Year;
+                if (patient.DateOfBirth.Date > DateTime.Today.AddYears(-age)) age--;
+                Console.WriteLine($"Age: {age}");
+
                 Console.WriteLine($"Gender: {patient.Gender}");
                 Console.WriteLine($"Blood Group: {patient.BloodGroup}");
                 Console.WriteLine($"Mobile: {patient.MobileNumber}");

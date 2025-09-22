@@ -58,6 +58,7 @@ namespace ConsoleAppCMSv2025.Repository
                 throw;
             }
         }
+
         public async Task<Patient> GetPatientByMMRAsync(string mmrNo)
         {
             Patient patient = null;
@@ -94,8 +95,6 @@ namespace ConsoleAppCMSv2025.Repository
             return patient;
         }
 
-
-
         public async Task<Patient> GetPatientByPhoneAsync(string phoneNumber)
         {
             Patient patient = null;
@@ -120,6 +119,31 @@ namespace ConsoleAppCMSv2025.Repository
 
             return patient;
         }
+
+        public async Task<List<Patient>> GetAllPatientsAsync()
+        {
+            List<Patient> patients = new List<Patient>();
+
+            using (SqlConnection conn = new SqlConnection(winConnString))
+            {
+                await conn.OpenAsync();
+                using (SqlCommand cmd = new SqlCommand("sp_GetAllPatients", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            patients.Add(MapReaderToPatient(reader));
+                        }
+                    }
+                }
+            }
+
+            return patients;
+        }
+
         private Patient MapReaderToPatient(SqlDataReader reader)
         {
             return new Patient
@@ -141,8 +165,3 @@ namespace ConsoleAppCMSv2025.Repository
         }
     }
 }
-
-
-
-
-

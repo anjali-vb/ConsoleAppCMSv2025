@@ -1,4 +1,5 @@
 ﻿using ConsoleAppCMSv2025.Model;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ConsoleAppCMSv2025.Repository
@@ -13,6 +14,6 @@ namespace ConsoleAppCMSv2025.Repository
 
         Task<Patient> GetPatientByPhoneAsync(string phoneNumber);
 
-
+        Task<List<Patient>> GetAllPatientsAsync();
     }
 }

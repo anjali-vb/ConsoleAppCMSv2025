@@ -18,5 +18,7 @@ namespace ConsoleAppCMSv2025.Service
         // For searching patient by  Phone number
 
         Task<Patient> GetPatientByPhoneAsync(string phoneNumber);
+
+        Task<List<Patient>> GetAllPatientsAsync();
     }
 }

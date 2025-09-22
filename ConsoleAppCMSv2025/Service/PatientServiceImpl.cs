@@ -31,6 +31,11 @@ namespace ConsoleAppCMSv2025.Service
         {
             return _patientRepository.GetPatientByPhoneAsync(phoneNumber);
         }
+
+        Task<List<Patient>> IPatientService.GetAllPatientsAsync()
+        {
+           return _patientRepository.GetAllPatientsAsync();
+        }
     }
 }
 
