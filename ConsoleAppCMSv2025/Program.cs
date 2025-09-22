@@ -496,8 +496,32 @@ namespace ClinicCMS
             Console.WriteLine("---- Create Appointment ----");
             var appointment = new Appointment();
 
-            Console.Write("Enter Appointment Date (yyyy-mm-dd): ");
-            appointment.AppointmentDate = DateTime.Parse(Console.ReadLine());
+            // Date validation loop
+            DateTime appointmentDate;
+            while (true)
+            {
+                Console.Write("Enter Appointment Date (Today/Tomorrow): ");
+                string dateInput = Console.ReadLine()?.Trim();
+
+                if (string.Equals(dateInput, "Today", StringComparison.OrdinalIgnoreCase))
+                {
+                    appointmentDate = DateTime.Today;
+                    appointment.AppointmentDate = appointmentDate;
+                    break; // Valid input, exit the loop
+                }
+                else if (string.Equals(dateInput, "Tomorrow", StringComparison.OrdinalIgnoreCase))
+                {
+                    appointmentDate = DateTime.Today.AddDays(1);
+                    appointment.AppointmentDate = appointmentDate;
+                    break; // Valid input, exit the loop
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid input! Please enter 'Today' or 'Tomorrow' only.");
+                    Console.ResetColor();
+                }
+            }
 
             Console.Write("Enter PeriodName: ");
             appointment.PeriodName = Console.ReadLine();
