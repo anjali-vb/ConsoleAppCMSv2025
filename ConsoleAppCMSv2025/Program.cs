@@ -523,11 +523,69 @@ namespace ClinicCMS
                 }
             }
 
-            Console.Write("Enter PeriodName: ");
-            appointment.PeriodName = Console.ReadLine();
+            // PeriodName selection and validation
+            string[] validPeriods = { "Morning", "Afternoon", "Evening" };
+            string periodName;
+            while (true)
+            {
+                Console.WriteLine("Select PeriodName:");
+                for (int i = 0; i < validPeriods.Length; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {validPeriods[i]}");
+                }
+                Console.Write("Enter choice (1-3) or type value: ");
+                string periodInput = Console.ReadLine();
+                if (int.TryParse(periodInput, out int periodIndex) && periodIndex >= 1 && periodIndex <= validPeriods.Length)
+                {
+                    periodName = validPeriods[periodIndex - 1];
+                    appointment.PeriodName = periodName;
+                    break;
+                }
+                else if (Array.Exists(validPeriods, p => p.Equals(periodInput, StringComparison.OrdinalIgnoreCase)))
+                {
+                    periodName = validPeriods.First(p => p.Equals(periodInput, StringComparison.OrdinalIgnoreCase));
+                    appointment.PeriodName = periodName;
+                    break;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid PeriodName! Please select from the options.");
+                    Console.ResetColor();
+                }
+            }
 
-            Console.Write("Enter Consultation Status: ");
-            appointment.ConsultationStatus = Console.ReadLine();
+            // Consultation Status selection and validation
+            string[] validStatuses = { "Scheduled", "Not Scheduled" };
+            string consultationStatus;
+            while (true)
+            {
+                Console.WriteLine("Select Consultation Status:");
+                for (int i = 0; i < validStatuses.Length; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {validStatuses[i]}");
+                }
+                Console.Write("Enter choice (1-2) or type value: ");
+                string statusInput = Console.ReadLine();
+                if (int.TryParse(statusInput, out int statusIndex) && statusIndex >= 1 && statusIndex <= validStatuses.Length)
+                {
+                    consultationStatus = validStatuses[statusIndex - 1];
+                    appointment.ConsultationStatus = consultationStatus;
+                    break;
+                }
+                else if (Array.Exists(validStatuses, s => s.Equals(statusInput, StringComparison.OrdinalIgnoreCase)))
+                {
+                    consultationStatus = validStatuses.First(s => s.Equals(statusInput, StringComparison.OrdinalIgnoreCase));
+                    appointment.ConsultationStatus = consultationStatus;
+                    break;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid Consultation Status! Please select from the options.");
+                    Console.ResetColor();
+                }
+            }
 
             // Display all patients before asking for Patient ID
             Console.WriteLine("\n---- Available Patients ----");
