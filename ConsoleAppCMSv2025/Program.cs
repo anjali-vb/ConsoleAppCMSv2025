@@ -768,8 +768,20 @@ namespace ClinicCMS
 
             appointment.IsActive = true;
 
-            Console.Write("Enter Time Slot: ");
-            appointment.TimeSlot = Console.ReadLine();
+            while (true) { 
+                Console.Write("Enter Time Slot: ");
+                string TimeSlot = Console.ReadLine();
+                if(CustomValidation.IsValidTimeSlotFormat(TimeSlot))
+                {
+                    appointment.TimeSlot = TimeSlot;
+                    break;
+                } else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Invalid input. Please enter a time slot in correct format.");
+                    Console.ResetColor();
+                }
+            }
 
             var (appointmentId, tokenNumber) = await appointmentService.CreateAppointmentAsync(appointment);
 

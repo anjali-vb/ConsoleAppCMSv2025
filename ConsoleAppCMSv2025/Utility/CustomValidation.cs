@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -65,7 +66,7 @@ namespace ConsoleAppCMSv2025.Utility
 
         //validatins for TblPatient Table
 
-          //for mobile number
+        //for mobile number
         public static ValidationResult ValidateMobileNumber(string mobile, ValidationContext context)
         {
             if (string.IsNullOrEmpty(mobile))
@@ -91,6 +92,160 @@ namespace ConsoleAppCMSv2025.Utility
 
             return ValidationResult.Success;
         }
+    
+
+     // Regex pattern to match time slot formats like "09:00am-9:15pm", "10:10", "09:00am-11:30"
+    private static readonly Regex TimeSlotPattern = new Regex(
+        @"^(?:(?<start>\d{1,2}:\d{2}(?:am|pm)?)-(?<end>\d{1,2}:\d{2}(?:am|pm)?)|(?<single>\d{1,2}:\d{2}(?:am|pm)?))$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled
+    );
+
+        /// <summary>
+        /// Validates if a time slot string follows the expected format
+        /// Supports formats like: "09:00am-9:15pm", "10:10", "09:00am-11:30"
+        /// </summary>
+        /// <param name="timeSlot">The time slot string to validate</param>
+        /// <returns>True if the format is valid, false otherwise</returns>
+        public static bool IsValidTimeSlotFormat(string timeSlot)
+        {
+            if (string.IsNullOrWhiteSpace(timeSlot))
+                return false;
+
+            return TimeSlotPattern.IsMatch(timeSlot.Trim());
+        }
+
+        /// <summary>
+        /// Validates time slot format and checks if the time range is logical (start time before end time)
+        /// </summary>
+        /// <param name="timeSlot">The time slot string to validate</param>
+        /// <param name="errorMessage">Output parameter containing error details if validation fails</param>
+        /// <returns>True if the time slot is valid and logical, false otherwise</returns>
+        public static bool IsValidTimeSlot(string timeSlot, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(timeSlot))
+            {
+                errorMessage = "Time slot cannot be null or empty";
+                return false;
+            }
+
+            timeSlot = timeSlot.Trim();
+
+            if (!TimeSlotPattern.IsMatch(timeSlot))
+            {
+                errorMessage = "Invalid time slot format";
+                return false;
+            }
+
+            var match = TimeSlotPattern.Match(timeSlot);
+
+            // If it's a single time (not a range), it's valid
+            if (match.Groups["single"].Success)
+            {
+                return ValidateTimeFormat(match.Groups["single"].Value, out errorMessage);
+            }
+
+            // Validate range format
+            string startTime = match.Groups["start"].Value;
+            string endTime = match.Groups["end"].Value;
+
+            if (!ValidateTimeFormat(startTime, out errorMessage))
+                return false;
+
+            if (!ValidateTimeFormat(endTime, out errorMessage))
+                return false;
+
+            // Check if start time is before end time
+            if (!IsStartTimeBeforeEndTime(startTime, endTime))
+            {
+                errorMessage = "Start time must be before end time";
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Validates individual time format (e.g., "09:00am", "10:10", "9:15pm")
+        /// </summary>
+        /// <param name="time">Time string to validate</param>
+        /// <param name="errorMessage">Error message if validation fails</param>
+        /// <returns>True if time format is valid</returns>
+        private static bool ValidateTimeFormat(string time, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            try
+            {
+                // Try parsing with various formats
+                string[] formats = { "h:mmtt", "hh:mmtt", "H:mm", "HH:mm" };
+
+                foreach (string format in formats)
+                {
+                    if (DateTime.TryParseExact(time, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                    {
+                        return true;
+                    }
+                }
+
+                errorMessage = $"Invalid time format: {time}";
+                return false;
+            }
+            catch
+            {
+                errorMessage = $"Invalid time format: {time}";
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Checks if start time is before end time in a time range
+        /// </summary>
+        /// <param name="startTime">Start time string</param>
+        /// <param name="endTime">End time string</param>
+        /// <returns>True if start time is before end time</returns>
+        private static bool IsStartTimeBeforeEndTime(string startTime, string endTime)
+        {
+            try
+            {
+                DateTime start = ParseTimeString(startTime);
+                DateTime end = ParseTimeString(endTime);
+
+                // Handle case where end time is next day (e.g., 11:00pm - 2:00am)
+                if (end < start)
+                {
+                    end = end.AddDays(1);
+                }
+
+                return start < end;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Parses a time string to DateTime
+        /// </summary>
+        /// <param name="timeString">Time string to parse</param>
+        /// <returns>Parsed DateTime</returns>
+        private static DateTime ParseTimeString(string timeString)
+        {
+            string[] formats = { "h:mmtt", "hh:mmtt", "H:mm", "HH:mm" };
+
+            foreach (string format in formats)
+            {
+                if (DateTime.TryParseExact(timeString, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
+                {
+                    return result;
+                }
+            }
+
+            throw new FormatException($"Unable to parse time: {timeString}");
+        }
+
     }
 }
 
