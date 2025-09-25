@@ -416,7 +416,7 @@ namespace ClinicCMS
                 }
             }
 
-            Console.Write("Enter Gender: ");
+            Console.Write("Enter Gender (M/F/O): ");
             patient.Gender = Console.ReadLine();
 
             Console.Write("Enter Blood Group: ");
@@ -445,7 +445,7 @@ namespace ClinicCMS
             Console.Write("Enter Address: ");
             patient.Address = Console.ReadLine();
 
-            Console.Write("Enter MembershipId (or leave blank): ");
+            Console.Write("Enter MembershipId (1-S,2-G,3-PL,4-Pr,5-B): ");
             string membershipInput = Console.ReadLine();
             patient.MembershipId = string.IsNullOrWhiteSpace(membershipInput) ? null : int.Parse(membershipInput);
 
